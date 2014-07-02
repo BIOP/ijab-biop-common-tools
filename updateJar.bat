@@ -1,0 +1,1 @@
+jar uf BIOP_Common_Tools.jar plugins.config icons *.ijm test.txt
