@@ -4,7 +4,8 @@
 
 sep = File.separator;
 // Install the BIOP Library
-call("BIOP_LibInstaller.installLibrary", "plugins"+sep+"BIOP"+sep+"BiopLib.ijm");
+call("BIOP_LibInstaller.installLibrary", "BIOP"+sep+"BIOPLib.ijm");
+
 
 run("Action Bar","jar:file:BIOP"+sep+"BIOP_Common_Tools.jar!/BIOP_Common_Tools.ijm");
 
