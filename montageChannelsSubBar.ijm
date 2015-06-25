@@ -15,11 +15,18 @@ function montageOptions(){
 	scaleLength = getDataD("ScaleBar Length", 100);
 	// scalebar height
 	scaleHeight = getDataD("ScaleBar height", 5);
+	
+	// Which Position gets the scalebar
+	atImage = getDataD("Scalebar At", "");
+	
 	// nrows ncols
 	mRows = getDataD("Montage Rows", "As Row");
 	mCols = getDataD("Montage Cols", 1);
 	// position of composite
 	cPos = getDataD("Channel Merge Position", "First");
+	isIgnore = getBool("Ignore LUTs except for Merged");
+	advMon = getDataD("Advanced Montage", "");
+	
 	// border size
 	bSize = getDataD("Montage Border", 0);
 	// border color
@@ -33,9 +40,13 @@ function montageOptions(){
 	Dialog.addChoice("Scalebar Position", scalePoses, scalePos);
 	Dialog.addNumber("Scalebar Length", scaleLength, 0, 5, "um");
 	Dialog.addNumber("Scalebar Height", scaleHeight, 0, 5, "px");
+	Dialog.addString("Scalebar At Image", atImage);
 	Dialog.addChoice("Montage Rows", rowChoice, mRows);
 	Dialog.addChoice("Montage Columns", colChoice, mCols);
 	Dialog.addChoice("Merged Image Position", imgPos, cPos);
+	Dialog.addCheckbox("Ignore LUTs except for Merged", isIgnore);
+	Dialog.addString("Advanced Montage", advMon);
+	
 	Dialog.addNumber("Montage Border", bSize,0,5,"px");
 	
 	Dialog.show();
@@ -45,11 +56,14 @@ function montageOptions(){
 	scalePos = Dialog.getChoice();
 	scaleLen = Dialog.getNumber();
 	scaleHei = Dialog.getNumber();
+	atImage  = Dialog.getString();
 	mRows = Dialog.getChoice();
 	mCols = Dialog.getChoice();
 	cPos = Dialog.getChoice();
+	isIgnore = Dialog.getCheckbox();
+	advMon = Dialog.getString();
 	bSize = Dialog.getNumber();
-	bColor = Dialog.getString();
+	
 	
 	setData("Use Scalebar", "Yes");
 	if (!useScale)
@@ -58,9 +72,12 @@ function montageOptions(){
 	setData("ScaleBar Position", scalePos);
 	setData("ScaleBar Length", scaleLen);
 	setData("ScaleBar Height", scaleHei);
+	setData("Scalebar At", atImage);
 	setData("Montage Rows", mRows);
 	setData("Montage Cols", mCols);
 	setData("Channel Merge Position", cPos);
+	setBool("Ignore LUTs except for Merged", isIgnore);
+	setData("Advanced Montage", advMon);
 	setData("Montage Border", bSize);
 }
 
@@ -80,47 +97,112 @@ function montageApply(){
 	cPos = getDataD("Channel Merge Position", "First");
 	// border size
 	bSize = getDataD("Montage Border", 0);
+
+	//Ignore LUT colors and keep gray
+	isIgnore = getBool("Ignore LUTs except for Merged");
+	
 	// border color
 	bColor = getDataD("Montage Border Color", "White");
-	getDimensions(x,y,c,z,t);
-	Stack.setDisplayMode("composite");
-	name = getTitle();
-	run("Duplicate...", " duplicate channels");
-	name2 = getTitle();
-	// Make RGB
-	run("Stack to RGB");
-	rgbName = getTitle();
 
-	//Split the other images
-	selectImage(name2);
-	run("Split Channels");
+	advMon = getDataD("Advanced Montage", "");
+
+	atImage = getDataD("Scalebar At", "");
 	
-	//Make each an RGB image
-	RGBnames = newArray(c);
-	for (i=1;i<=c; i++) {
-		if (cPos == "First") {
-			k = i;
-		} else {
-			k=c-i+1;
-		}
-			selectImage("C"+k+"-"+name2);
-			
+	
+	if (advMon != "") {
+
+		Stack.setDisplayMode("composite");
+		run("Duplicate...", " duplicate channels");
+		name = getTitle();
+		run("Split Channels");
+		
+		
+		// Get the number of separate images we need to create
+		monImages = split(advMon, ", ");
+		finalImages = newArray(monImages.length);
+		c =  monImages.length-1;
+		for(i=0; i< monImages.length; i++) {
+			channels = split(monImages[i], "+");
+			str = "";
+			for (ch=0; ch<channels.length; ch++) {
+				str += "c"+(ch+1)+"=[C"+channels[ch]+"-"+name+"] ";
+			}
+			for (k=ch-1;k<7;k++) {
+				str += "c"+(k+1)+"=[*None*] ";
+			}
+			print("Position "+(i+1)+"String: "+str);
+			if(channels.length>1) {
+				run("Merge Channels...", str+"create keep");
+			} else {
+				selectImage("C"+monImages[i]+"-"+name);
+				run("Duplicate...", "title=[temp]");
+			}
 			run("RGB Color");
+			rename("Position "+(i+1));
+			finalImages[i] = "Position "+(i+1);
+		}
+
+		
+		for(i=1; i< monImages.length; i++) {
+			// Make Montage
+			selectImage(finalImages[i]);
+			
 			run("Copy");
 			close();
-			selectImage(rgbName);
+			selectImage(finalImages[0]);
 			run("Add Slice");
 			run("Paste");
+		}
+		
 
-	}
-
-	// Make the RGB first or last
-	if (cPos == "Last") {
-		run("Reverse");
+		
+	} else {
+		getDimensions(x,y,c,z,t);
+			
+		Stack.setDisplayMode("composite");
+		name = getTitle();
+		run("Duplicate...", " duplicate channels");
+		name2 = getTitle();
+		// Make RGB
+		run("Stack to RGB");
+		rgbName = getTitle();
+	
+		//Split the other images
+		selectImage(name2);
+		run("Split Channels");
+		
+		//Make each an RGB image
+		RGBnames = newArray(c);
+		for (i=1;i<=c; i++) {
+			if (cPos == "First") {
+				k = i;
+			} else {
+				k=c-i+1;
+			}
+				selectImage("C"+k+"-"+name2);
+				if(isIgnore) { run ("Grays"); }
+				run("RGB Color");
+				run("Copy");
+				close();
+				selectImage(rgbName);
+				run("Add Slice");
+				run("Paste");
+	
+		}
+	
+		// Make the RGB first or last
+		if (cPos == "Last") {
+			run("Reverse");
+		}
 	}
 	//Set the scale
 	if (useScale=="Yes") {
-		run("Scale Bar...", "width="+scaleLength+" height="+scaleHeight+" font=9 color=White background=None location=["+scalePos+"] bold hide");
+		if (atImage=="") {
+			run("Scale Bar...", "width="+scaleLength+" height="+scaleHeight+" font=9 color=White background=None location=["+scalePos+"] bold hide");
+		} else {
+			setSlice(parseInt(atImage));
+			run("Scale Bar...", "width="+scaleLength+" height="+scaleHeight+" font=9 color=White background=None location=["+scalePos+"] bold hide");
+		}
 	}
 
 	if (mRows == "As Row") {
@@ -135,8 +217,6 @@ function montageApply(){
 	
 	rename(name+"_Montage");
 	
-	selectWindow(rgbName);
-	close();
 	selectWindow(name+"_Montage");
 	
 }
@@ -167,7 +247,9 @@ montageOptions();
 label = ...on current image
 icon = noicon
 arg =<macro>
+setBatchMode(true);
 montageApply();
+setBatchMode(false);
 </macro>
 
 <button>
