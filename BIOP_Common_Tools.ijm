@@ -219,24 +219,10 @@ run("Fire");
 <text><html><font size=2 color=#66666f> Channels edition (sub-bar)
 <line>	//start of a line 	: Channels LUT
 <button>
-label=LUT
+label=Channel Edition Tools
 icon=noicon
 arg=<macro>
-run("Action Bar","jar:file:BIOP"+File.separator+"BIOP_Common_Tools.jar!/channelsLutSubBar.ijm");
-</macro>
-
-<button>
-label= B & C
-icon=noicon
-arg=<macro>
-run("Action Bar","jar:file:BIOP"+File.separator+"BIOP_Common_Tools.jar!/brightnessAndContrastSubBar.ijm");
-</macro>
-
-<button>
-label= Montage
-icon=noicon
-arg=<macro>
-run("Action Bar","jar:file:BIOP"+File.separator+"BIOP_Common_Tools.jar!/montageChannelsSubBar.ijm");
+run("Action Bar","jar:file:BIOP"+File.separator+"BIOP_Common_Tools.jar!/channelManipToolsSubBar.ijm");
 </macro>
 </line>
 
