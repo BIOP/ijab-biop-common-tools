@@ -26,4 +26,5 @@ ECHO Creating JAR File
 jar cf %finalName% plugins.config *.ijm
 ECHO Done.
 
+copy %finalName% "C:\Fiji.app\plugins\BIOP\%finalName%"
 PAUSE

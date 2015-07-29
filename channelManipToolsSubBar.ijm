@@ -494,7 +494,6 @@ for (i=0; i<lengthOf(file); i++) {
 		
 		
 		print(savingDir+fileNameNoExt+process+".tif");
-		waitForUser;
 		saveAs("Tiff", savingDir+fileNameNoExt+process+".tif");	// save the file
 		run("Close All");						// Close the image before going to the next one
 	}
