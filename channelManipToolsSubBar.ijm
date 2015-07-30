@@ -1,6 +1,6 @@
 // DEBUG LINE
-//run("Action Bar","plugins/ActionBar/channelManipToolsSubBar.ijm");
-//exit();
+run("Action Bar","plugins/ActionBar/channelManipToolsSubBar.ijm");
+exit();
 // END DEBUG
 
 <codeLibrary>
@@ -406,7 +406,9 @@ montageOptions();
 label= Apply to Image
 icon=noicon
 arg=<macro>
+setBatchMode(true);
 montageApply();
+setBatchMode(false);
 </macro>
 <button>
 label= Apply To Folder...
@@ -437,6 +439,7 @@ for (i=0; i<lengthOf(file); i++) {
 label= ... on the current image
 icon=noicon
 arg=<macro>
+setBatchMode(true);
 checkLUT = getData("color channel 1 using LUT");
 checkBC = getData("min ch1");
 checkMontage = getData("Channel Merge Position");
@@ -454,6 +457,7 @@ if(checkMontage!="") {
 	
 	montageApply();
 }
+setBatchMode(false);
 </macro>
 
 <button>
@@ -461,6 +465,7 @@ label= ... on a folder
 icon=noicon
 arg=<macro>
 dir = getDirectory("Please , select a folder containing images");	//get the folder
+setBatchMode(true);
 file = getFileList(dir);
 savingDir = dir+"Processed"+File.separator;
 File.makeDirectory(savingDir);
@@ -497,6 +502,7 @@ for (i=0; i<lengthOf(file); i++) {
 		saveAs("Tiff", savingDir+fileNameNoExt+process+".tif");	// save the file
 		run("Close All");						// Close the image before going to the next one
 	}
+	setBatchMode(false);
 }
 </macro>
 </line>
