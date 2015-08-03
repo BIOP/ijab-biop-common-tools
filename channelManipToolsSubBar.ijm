@@ -1,6 +1,6 @@
 // DEBUG LINE
-run("Action Bar","plugins/ActionBar/channelManipToolsSubBar.ijm");
-exit();
+//run("Action Bar","plugins/ActionBar/channelManipToolsSubBar.ijm");
+//exit();
 // END DEBUG
 
 <codeLibrary>
@@ -89,6 +89,10 @@ function brightnessAndContrastSettingApply(){
 
 //montage options
 function montageOptions(){
+
+	// Get dimensions
+	getDimensions(x,y,c,z,t);
+	
 	// Scale bar position
 	scalePos = getDataD("ScaleBar Position", "Lower Right");
 	// scale bar size
@@ -109,6 +113,9 @@ function montageOptions(){
 	
 	// border size
 	bSize = getDataD("Montage Border", 0);
+
+	zSlices = getDataD("Z Slices", "");
+	
 	// border color
 	rowChoice= newArray("As Row", "1","2", "3", "4", "5", "6");
 	colChoice= newArray("As Column","1", "2", "3", "4", "5", "6");
@@ -128,6 +135,11 @@ function montageOptions(){
 	Dialog.addString("Advanced Montage", advMon);
 	
 	Dialog.addNumber("Montage Border", bSize,0,5,"px");
+
+	if (z > 1) {
+		Dialog.addMessage("Image is Z Stack (nZ = "+z+")\nLeave blank to do all slices");
+		Dialog.addString("Choose slices for MIP", zSlices);
+	}
 	
 	Dialog.show();
 	
@@ -144,6 +156,11 @@ function montageOptions(){
 	advMon = Dialog.getString();
 	bSize = Dialog.getNumber();
 	
+	if (z > 1) {
+		zSlices = Dialog.getString();
+	} else {
+		zSlices = "None";
+	}
 	
 	setData("Use Scalebar", "Yes");
 	if (!useScale)
@@ -159,6 +176,7 @@ function montageOptions(){
 	setBool("Ignore LUTs except for Merged", isIgnore);
 	setData("Advanced Montage", advMon);
 	setData("Montage Border", bSize);
+	setData("Z Slices", zSlices);
 }
 
 function montageApply(){
@@ -188,11 +206,36 @@ function montageApply(){
 
 	atImage = getData("Scalebar At");
 
+	zSlices = getData("Z Slices");
+
+	
+
+
 	if(useScale == "") {
 		showMessage("Montage Settings not set.");
 		exit();
 	}
+
 	
+	ori = getTitle();
+	if(zSlices != "None" && zSlices != "") {
+		
+		zds = split(zSlices,"-");
+		if ( lengthOf(zds) == 2) {
+			zStart = parseInt(zds[0]);
+			zStop  = parseInt(zds[1]);
+		} else {
+			zStart = parseInt(zSlices);
+			zStop  = zStart;
+		}
+		run("Z Project...", "start="+zStart+" stop="+zStop+" projection=[Max Intensity]");
+		rename(ori+" Slice_"+zSlices);
+	} else if (zSlices == "") {
+		run("Z Project...", "projection=[Max Intensity]");
+		rename(ori+" Slice_All");
+	}
+	
+	ori = getTitle();
 	if (advMon != "") {
 
 		Stack.setDisplayMode("composite");
@@ -304,9 +347,9 @@ function montageApply(){
 	}
 
 	
-	rename(name+"_Montage");
+	rename(ori+"_Montage");
 	
-	selectWindow(name+"_Montage");
+	selectWindow(ori+"_Montage");
 	
 }
 
