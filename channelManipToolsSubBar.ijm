@@ -92,7 +92,8 @@ function montageOptions(){
 
 	// Get dimensions
 	getDimensions(x,y,c,z,t);
-	
+
+	useScale = getBoolD("Use Scalebar", true);
 	// Scale bar position
 	scalePos = getDataD("ScaleBar Position", "Lower Right");
 	// scale bar size
@@ -115,15 +116,22 @@ function montageOptions(){
 	bSize = getDataD("Montage Border", 0);
 
 	zSlices = getDataD("Z Slices", "");
+
+	// Image Legend
+	fontSize = getDataD("Font Size", 14);
+	chanNames = getDataD("Channel Names", "");
+	position = getDataD("Legend Position", "bottom left");
+	slice = getDataD("Legend Montage Position", 1);
 	
 	// border color
 	rowChoice= newArray("As Row", "1","2", "3", "4", "5", "6");
 	colChoice= newArray("As Column","1", "2", "3", "4", "5", "6");
 	scalePoses=newArray("Lower Right", "Lower Left", "Upper Right", "Upper Left");
 	imgPos=newArray("First", "Last");
+	positions = newArray("top left", "top right", "bottom left", "bottom right");
 	
 	Dialog.create("Montage Options");
-	Dialog.addCheckbox("Use Scalebar", true);
+	Dialog.addCheckbox("Use Scalebar", useScale);
 	Dialog.addChoice("Scalebar Position", scalePoses, scalePos);
 	Dialog.addNumber("Scalebar Length", scaleLength, 0, 5, "um");
 	Dialog.addNumber("Scalebar Height", scaleHeight, 0, 5, "px");
@@ -140,6 +148,11 @@ function montageOptions(){
 		Dialog.addMessage("Image is Z Stack (nZ = "+z+")\nLeave blank to do all slices");
 		Dialog.addString("Choose slices for MIP", zSlices);
 	}
+	Dialog.addMessage("Montage Lengend");
+	Dialog.addString("Names for the Channels", chanNames);
+	Dialog.addNumber("Font Size", fontSize);
+	Dialog.addChoice("Legend Position", positions, position);
+	Dialog.addNumber("Legend At Image", slice);
 	
 	Dialog.show();
 	
@@ -149,22 +162,25 @@ function montageOptions(){
 	scaleLen = Dialog.getNumber();
 	scaleHei = Dialog.getNumber();
 	atImage  = Dialog.getString();
-	mRows = Dialog.getChoice();
-	mCols = Dialog.getChoice();
-	cPos = Dialog.getChoice();
+	mRows    = Dialog.getChoice();
+	mCols    = Dialog.getChoice();
+	cPos     = Dialog.getChoice();
 	isIgnore = Dialog.getCheckbox();
-	advMon = Dialog.getString();
-	bSize = Dialog.getNumber();
+	advMon   = Dialog.getString();
+	bSize    = Dialog.getNumber();
 	
 	if (z > 1) {
 		zSlices = Dialog.getString();
 	} else {
 		zSlices = "None";
 	}
+
+	chanNames= Dialog.getString();
+	fontSize = Dialog.getNumber();
+	position = Dialog.getChoice();
+	slice    = Dialog.getNumber();
 	
-	setData("Use Scalebar", "Yes");
-	if (!useScale)
-		setData("Use Scalebar", "No");
+	setBool("Use Scalebar", useScale);
 	
 	setData("ScaleBar Position", scalePos);
 	setData("ScaleBar Length", scaleLen);
@@ -177,11 +193,15 @@ function montageOptions(){
 	setData("Advanced Montage", advMon);
 	setData("Montage Border", bSize);
 	setData("Z Slices", zSlices);
+	setData("Font Size", fontSize);
+	setData("Channel Names", chanNames);
+	setData("Legend Position", position);
+	setData("Legend Montage Position", slice);
 }
 
 function montageApply(){
 	// Use scalebar
-	useScale = getData("Use Scalebar");
+	useScale = getBool("Use Scalebar");
 	// Scale bar position
 	scalePos = getData("ScaleBar Position");
 	// scale bar size
@@ -208,16 +228,29 @@ function montageApply(){
 
 	zSlices = getData("Z Slices");
 
-	
-
-
-	if(useScale == "") {
+	if(scalePos == "") {
 		showMessage("Montage Settings not set.");
 		exit();
 	}
 
+
 	
 	ori = getTitle();
+
+	// Get LUTS
+	Stack.getDimensions(dx,dy,dc,dz,dt);
+	r = newArray(dc);
+	g = newArray(dc);
+	b = newArray(dc);
+	
+	for(ch=0; ch<dc;ch++) {
+		Stack.setPosition(ch+1,1,1);
+		getLut(reds, greens, blues);
+		r[ch] = reds[255];
+		g[ch] = greens[255];
+		b[ch] = blues[255];
+	}
+	
 	if(zSlices != "None" && zSlices != "") {
 		
 		zds = split(zSlices,"-");
@@ -328,7 +361,7 @@ function montageApply(){
 		}
 	}
 	//Set the scale
-	if (useScale=="Yes") {
+	if (useScale) {
 		if (atImage=="") {
 			run("Scale Bar...", "width="+scaleLength+" height="+scaleHeight+" font=9 color=White background=None location=["+scalePos+"] bold hide");
 		} else {
@@ -337,25 +370,93 @@ function montageApply(){
 		}
 	}
 
-	if (mRows == "As Row") {
-		run("Make Montage...", "columns="+(c+1)+" rows=1 scale=1.0 border="+bSize);
-	} else if (mCols == "As Column") {
-		run("Make Montage...", "columns=1 rows="+(c+1)+" scale=1.0 border="+bSize);
-	} else {
-	// Assemble the stack for 
-	run("Make Montage...", "columns="+mCols+" rows="+mRows+" scale=1.0 border="+bSize);
+	// If there are channel names, add them
+	channelNames = getData("Channel Names");
+	fontSize = parseInt(getData("Font Size"));
+	position = getData("Legend Position");
+	slice = getData("Legend Montage Position");
+	if(channelNames != "") {
+		nameChannels(channelNames, fontSize, r,g,b, slice, position);
 	}
 
+	if (mRows == "As Row") {
+		run("Make Montage...", "columns="+(c+1)+" rows=1 scale=1.0 border="+bSize+" use");
+	} else if (mCols == "As Column") {
+		run("Make Montage...", "columns=1 rows="+(c+1)+" scale=1.0 border="+bSize+" use");
+	} else {
+	// Assemble the stack for 
+	run("Make Montage...", "columns="+mCols+" rows="+mRows+" scale=1.0 border="+bSize+" use");
+	}
 	
+	
+
 	rename(ori+"_Montage");
 	
 	selectWindow(ori+"_Montage");
 	
 }
 
+function getLargestString(stringArray) {
+	maxLen = -1;
+	for(i=0; i<stringArray.length; i++) {
+		if(lengthOf(stringArray[i]) > maxLen) {
+			maxLen = lengthOf(stringArray[i]);
+			largest = stringArray[i];
+		}
+	}
+	return largest;
+}
 
+function nameChannels(channelNames, fontSize, r,g,b, slice, position) {
+	padding=5;
+	// work in the right position
+	setSlice(slice);
+	
+	// Width and height of the image
+	height = getHeight();
+	width  = getWidth();
+
+	// Find dimensions of legend
+	//   Split Channel names
+	channels = split(channelNames, ", ");
+	
+	setFont("SansSerif", fontSize, "bold");
+	largestS = getLargestString(channels);
+	
+	boxWidth = getStringWidth(largestS)+2*padding;
+	boxHeight = (fontSize+1)*channels.length+2*padding;
+	
+	// Get the position of the legend
+	thePos = split(position, " ");
+	if (thePos[0] == "top") {
+		posy = 0;
+	} else {
+		posy = height - boxHeight;
+	}
+
+	if (thePos[1] == "left") {
+		posx = 0;
+	} else {
+		posx = width - boxWidth;
+	}
+
+	// Create a box around the fonts
+	setColor(128,128,128);
+	fillRect(posx, posy, boxWidth, boxHeight);
+
+	// Make the text the right color
+	textString = channels[0];
+	for(i=0; i<channels.length;i++) {
+		setColor(r[i]-25,g[i]-25,b[i]-25);
+		textString= channels[i];
+		posy += fontSize+1;
+		drawString(textString, posx+padding, posy+padding);
+		
+	}
+}
 
 </codeLibrary>
+
 <text><html><font size=1 color=#66666f>
 <text><html><font size=3 color=#66666f> Lookup Table Modification
 <line>
