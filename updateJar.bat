@@ -5,8 +5,8 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 REM Set name of ActionBar
 set actionBarName=BIOP_Common_Tools
 
-copy "C:\Fiji.app\plugins\ActionBar\BIOP_Common_Tools.ijm" BIOP_Common_Tools.ijm
-copy "C:\Fiji.app\plugins\ActionBar\channelManipToolsSubBar.ijm" channelManipToolsSubBar.ijm
+copy "C:\Fiji\plugins\ActionBar\BIOP_Common_Tools.ijm" BIOP_Common_Tools.ijm
+copy "C:\Fiji\plugins\ActionBar\channelManipToolsSubBar.ijm" channelManipToolsSubBar.ijm
 
 ECHO Packing ActionBar: "%actionBarName%"
 
@@ -26,5 +26,5 @@ ECHO Creating JAR File
 jar cf %finalName% plugins.config *.ijm
 ECHO Done.
 
-copy %finalName% "C:\Fiji.app\plugins\BIOP\%finalName%"
+copy %finalName% "C:\Fiji\plugins\BIOP\%finalName%"
 PAUSE

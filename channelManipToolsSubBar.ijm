@@ -146,7 +146,7 @@ function montageOptions(){
 
 	if (z > 1) {
 		Dialog.addMessage("Image is Z Stack (nZ = "+z+")\nLeave blank to do all slices");
-		Dialog.addString("Choose slices for MIP", zSlices);
+		Dialog.addString("Choose slice range for MIP", zSlices);
 	}
 	Dialog.addMessage("Montage Lengend");
 	Dialog.addString("Names for the Channels", chanNames);
@@ -418,7 +418,7 @@ function nameChannels(channelNames, fontSize, r,g,b, slice, position) {
 
 	// Find dimensions of legend
 	//   Split Channel names
-	channels = split(channelNames, ", ");
+	channels = split(channelNames, ",");
 	
 	setFont("SansSerif", fontSize, "bold");
 	largestS = getLargestString(channels);

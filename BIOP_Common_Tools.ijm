@@ -6,6 +6,10 @@ sep = File.separator;
 // Install the BIOP Library
 call("BIOP_LibInstaller.installLibrary", "BIOP"+sep+"BIOPLib.ijm");
 
+runFrom = "jar:file:BIOP/BIOP_Common_Tools.jar!/BIOP_Common_Tools.ijm";
+
+// DEBUG Code, uncomment to use
+//runFrom = "/plugins/ActionBar/BIOP_Common_Tools.ijm";
 
 run("Action Bar","jar:file:BIOP/BIOP_Common_Tools.jar!/BIOP_Common_Tools.ijm");
 
