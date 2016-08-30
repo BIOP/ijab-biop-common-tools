@@ -290,7 +290,7 @@ function montageApply(){
 			for (k=ch-1;k<7;k++) {
 				str += "c"+(k+1)+"=[*None*] ";
 			}
-			print("Position "+(i+1)+"String: "+str);
+			//print("Position "+(i+1)+"String: "+str);
 			if(channels.length>1) {
 				run("Merge Channels...", str+"create keep");
 			} else {
@@ -379,16 +379,18 @@ function montageApply(){
 		nameChannels(channelNames, fontSize, r,g,b, slice, position);
 	}
 
-	if (mRows == "As Row") {
-		run("Make Montage...", "columns="+(c+1)+" rows=1 scale=1.0 border="+bSize+" use");
-	} else if (mCols == "As Column") {
-		run("Make Montage...", "columns=1 rows="+(c+1)+" scale=1.0 border="+bSize+" use");
-	} else {
-	// Assemble the stack for 
-	run("Make Montage...", "columns="+mCols+" rows="+mRows+" scale=1.0 border="+bSize+" use");
+	if(nSlices >1) {
+
+		if (mRows == "As Row") {
+			run("Make Montage...", "columns="+(c+1)+" rows=1 scale=1.0 border="+bSize+" use");
+		} else if (mCols == "As Column") {
+			run("Make Montage...", "columns=1 rows="+(c+1)+" scale=1.0 border="+bSize+" use");
+		} else {
+		// Assemble the stack for 
+		run("Make Montage...", "columns="+mCols+" rows="+mRows+" scale=1.0 border="+bSize+" use");
+		}
+	
 	}
-	
-	
 
 	rename(ori+"_Montage");
 	
@@ -490,7 +492,7 @@ for (i=0; i<lengthOf(file); i++) {
 		
 		channelsLUTApply();
 		
-		saveAs("Tiff", savingDir+fileNameNoExt+"_selectedLUT.tif");	// save the file
+		saveAs("Tiff", savingDir+fileNameNoExt+"_LUT.tif");	// save the file
 		run("Close All");						// Close the image before going to the next one
 	}
 }
@@ -519,7 +521,7 @@ icon=noicon
 arg=<macro>
 dir = getDirectory("Please , select a folder containing images");			//get the folder
 file = getFileList(dir);
-savingDir = dir+"saving_selectedLUT"+File.separator;
+savingDir = dir+"saving_selectedBC"+File.separator;
 File.makeDirectory(savingDir);
 
 for (i=0; i<lengthOf(file); i++) {
@@ -570,7 +572,7 @@ for (i=0; i<lengthOf(file); i++) {
 		
 		montageApply();
 		
-		saveAs("Tiff", savingDir+fileNameNoExt+"_montage.tif");	// save the file
+		saveAs("Tiff", savingDir+fileNameNoExt+"_Montage.tif");	// save the file
 		run("Close All");						// Close the image before going to the next one
 	}
 }
@@ -642,7 +644,7 @@ for (i=0; i<lengthOf(file); i++) {
 		
 		
 		
-		print(savingDir+fileNameNoExt+process+".tif");
+		//print(savingDir+fileNameNoExt+process+".tif");
 		saveAs("Tiff", savingDir+fileNameNoExt+process+".tif");	// save the file
 		run("Close All");						// Close the image before going to the next one
 	}
