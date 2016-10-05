@@ -17,20 +17,20 @@ function channelsLUTSelection(){
 
 	getDimensions(width, height, channels, slices, frames);
 	
-	//colorArray = getList("LUTs");
-	colorArray = newArray("Red","Green","Blue","Grays","Cyan","Magenta","Yellow","Fire");
-	colorSelected = newArray(channels);
-
-	Dialog.create("LUT selection")	//ask user for LUT selection
-	for (i=0;i<channels;i++){
-		Dialog.addChoice("color channel "+(i+1)+", using LUT", colorArray, colorArray[i]);
-	}
-	Dialog.show() ;
+	defaultsArray = newArray("Red","Green","Blue","Grays","Cyan","Magenta","Yellow","Fire");
+	names    = newArray(0);
+	types    = newArray(0);
+	defaults = newArray(0);
 	
-	for (i=0;i<channels;i++){	//get and record user's selection
-		colorSelected [i]= Dialog.getChoice();
-		setData("color channel "+(i+1)+" using LUT", colorSelected[i]);
+
+	for (i=0;i<channels;i++){
+		names = Array.concat(names, "color channel "+(i+1)+" using LUT");
+		types = Array.concat(types,"lut");
+		defaults = Array.concat(defaults, defaultsArray[i]);
 	}
+
+	promptParameters(names, types, defaults);
+	
 }
 
 function channelsLUTApply(){
