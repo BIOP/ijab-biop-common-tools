@@ -93,6 +93,9 @@ function montageOptions(){
 	// Get dimensions
 	getDimensions(x,y,c,z,t);
 
+	// Check if ROIS
+	nRois = roiManager("Count");
+	
 	useScale = getBoolD("Use Scalebar", true);
 	// Scale bar position
 	scalePos = getDataD("ScaleBar Position", "Lower Right");
@@ -123,12 +126,19 @@ function montageOptions(){
 	position = getDataD("Legend Position", "bottom left");
 	slice = getDataD("Legend Montage Position", 1);
 	
+	// ROIs
+	isShowRois = getBool("Display ROIs");
+	roiOrder   = getDataD("ROI Order","");
+	roiColors  = getDataD("ROI Colors","");
+	
 	// border color
 	rowChoice= newArray("As Row", "1","2", "3", "4", "5", "6");
 	colChoice= newArray("As Column","1", "2", "3", "4", "5", "6");
 	scalePoses=newArray("Lower Right", "Lower Left", "Upper Right", "Upper Left");
 	imgPos=newArray("First", "Last");
 	positions = newArray("top left", "top right", "bottom left", "bottom right");
+
+	
 	
 	Dialog.create("Montage Options");
 	Dialog.addCheckbox("Use Scalebar", useScale);
@@ -153,6 +163,15 @@ function montageOptions(){
 	Dialog.addNumber("Font Size", fontSize);
 	Dialog.addChoice("Legend Position", positions, position);
 	Dialog.addNumber("Legend At Image", slice);
+
+	//ROIS
+	if(nRois > 0) {
+		Dialog.addMessage("There are "+nRois+" ROIs");
+		Dialog.addCheckbox("Show ROIs on Montage?", isShowRois);
+		Dialog.addString("ROI Order", roiOrder);
+		Dialog.addString("ROI Colors", roiColors);
+		
+	}
 	
 	Dialog.show();
 	
@@ -179,6 +198,16 @@ function montageOptions(){
 	fontSize = Dialog.getNumber();
 	position = Dialog.getChoice();
 	slice    = Dialog.getNumber();
+
+		//ROIS
+	if(nRois > 0) {		
+		isShowRois = Dialog.getCheckbox();
+		roiOrder   = Dialog.getString();
+		roiColors   = Dialog.getString();	
+	}
+
+
+
 	
 	setBool("Use Scalebar", useScale);
 	
@@ -197,6 +226,11 @@ function montageOptions(){
 	setData("Channel Names", chanNames);
 	setData("Legend Position", position);
 	setData("Legend Montage Position", slice);
+
+	setBool("Display ROIs",isShowRois);
+	setData("ROI Order",roiOrder);
+	setData("ROI Colors",roiColors);
+	
 }
 
 function montageApply(){
@@ -379,6 +413,11 @@ function montageApply(){
 		nameChannels(channelNames, fontSize, r,g,b, slice, position);
 	}
 
+	// Here we have a stack and maybe some ROIs exist in the ROI manager
+	dealWithRois();
+	
+	
+
 	if(nSlices >1) {
 
 		if (mRows == "As Row") {
@@ -397,6 +436,36 @@ function montageApply(){
 	selectWindow(ori+"_Montage");
 	
 }
+
+function dealWithRois() {
+	name = getTitle();
+	// Right now we have the montage and we want to see if we put some ROIs in there
+	isShowRois = getBool("Display ROIs");
+	if (!isShowRois) return;
+
+	getDimensions(x,y,c,z,t);
+	
+	// Work on the Rois
+	roiOrder   = split(getDataD("ROI Order" ,""),",");
+	roiColors  = split(getDataD("ROI Colors",""),",");
+	roiWidth   = getDataD("ROI Width" ,2);
+	roiIdx = 0;
+	for(i=0; i<roiOrder.length; i++) {
+		selectImage(name);
+		if(roiOrder[i] != "") {
+			roiManager("Select", roiIdx);
+			Roi.setStrokeWidth(roiWidth);
+			Roi.setStrokeColor(roiColors[i]);
+			setSlice(i+1);
+			run("Add Selection...");
+			roiIdx++;
+		}
+	}
+		
+	run("Flatten", "stack");
+	
+}
+
 
 function getLargestString(stringArray) {
 	maxLen = -1;
