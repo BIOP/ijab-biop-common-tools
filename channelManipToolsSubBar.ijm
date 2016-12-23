@@ -112,7 +112,7 @@ function montageOptions(){
 	mCols = getDataD("Montage Cols", 1);
 	// position of composite
 	cPos = getDataD("Channel Merge Position", "First");
-	isIgnore = getBool("Ignore LUTs except for Merged");
+	isIgnore = getBoolD("Ignore LUTs except for Merged", false);
 	advMon = getDataD("Advanced Montage", "");
 	
 	// border size
@@ -127,7 +127,7 @@ function montageOptions(){
 	slice = getDataD("Legend Montage Position", 1);
 	
 	// ROIs
-	isShowRois = getBool("Display ROIs");
+	isShowRois = getBoolD("Display ROIs", false);
 	roiOrder   = getDataD("ROI Order","");
 	roiColors  = getDataD("ROI Colors","");
 	
@@ -235,7 +235,7 @@ function montageOptions(){
 
 function montageApply(){
 	// Use scalebar
-	useScale = getBool("Use Scalebar");
+	useScale = getBoolD("Use Scalebar", true);
 	// Scale bar position
 	scalePos = getData("ScaleBar Position");
 	// scale bar size
@@ -251,7 +251,7 @@ function montageApply(){
 	bSize = getData("Montage Border");
 
 	//Ignore LUT colors and keep gray
-	isIgnore = getBool("Ignore LUTs except for Merged");
+	isIgnore = getBoolD("Ignore LUTs except for Merged", false);
 	
 	// border color
 	bColor = getData("Montage Border Color");
@@ -440,7 +440,7 @@ function montageApply(){
 function dealWithRois() {
 	name = getTitle();
 	// Right now we have the montage and we want to see if we put some ROIs in there
-	isShowRois = getBool("Display ROIs");
+	isShowRois = getBoolD("Display ROIs", false);
 	if (!isShowRois) return;
 
 	getDimensions(x,y,c,z,t);
